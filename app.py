@@ -63,6 +63,7 @@ def calculate_benefit(buy_price, sell_price):
     """Calculate benefit from buy and sell prices"""
     buy = float(buy_price) if buy_price else 0.0
     sell = float(sell_price) if sell_price else 0.0
+    # Only calculate benefit if item is actually sold (sell_price > 0)
     return sell - buy if sell > 0 else 0.0
 
 def get_unique_providers():
@@ -182,3 +183,4 @@ def get_providers():
 if __name__ == '__main__':
     ensure_csv_exists()
     app.run(debug=True, port=5000)
+    

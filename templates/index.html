@@ -605,7 +605,7 @@
                     <td class="editable" onclick="editCell(this, ${product.id}, 'provider')">${highlightSearchTerm(product.provider || '')}</td>
                     <td class="editable" onclick="editCell(this, ${product.id}, 'buy_price')">${product.buy_price.toFixed(2)}</td>
                     <td class="editable" onclick="editCell(this, ${product.id}, 'sell_price')">${product.sell_price > 0 ? product.sell_price.toFixed(2) : ''}</td>
-                    <td>${product.benefit.toFixed(2)}</td>
+                    <td>${product.sell_price > 0 ? product.benefit.toFixed(2) : ''}</td>
                     <td>${product.date}</td>
                     <td>${product.sell_date || ''}</td>
                 `;
@@ -763,8 +763,12 @@
                     product[field] = value;
                 }
                 
-                // Recalculate benefit
-                product.benefit = (product.sell_price || 0) - (product.buy_price || 0);
+                // Recalculate benefit - only show benefit if item is actually sold
+                if (product.sell_price > 0) {
+                    product.benefit = product.sell_price - (product.buy_price || 0);
+                } else {
+                    product.benefit = 0; // No benefit if not sold
+                }
                 
                 // Set sell_date when sell_price is first added (changed from 0 to a value)
                 if (field === 'sell_price') {
