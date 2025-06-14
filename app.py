@@ -187,6 +187,45 @@ def save_all_products():
     save_products(products)
     return jsonify({'success': True})
 
+@app.route('/summary')
+def summary():
+    """Summary page with analytics"""
+    products = load_products()
+    return render_template('summary.html', products=products)
+
+@app.route('/api/summary/stats')
+def get_summary_stats():
+    """Get summary statistics"""
+    products = load_products()
+    
+    # Calculate total benefits (sum of all benefits where sell_price > 0)
+    total_benefits = sum(
+        float(product.get('benefit', 0)) 
+        for product in products 
+        if float(product.get('sell_price', 0)) > 0
+    )
+    
+    # Calculate capital (sum of buy_price for unsold products)
+    # Unsold = sell_price is 0 or empty
+    capital = sum(
+        float(product.get('buy_price', 0)) 
+        for product in products 
+        if float(product.get('sell_price', 0)) == 0
+    )
+    
+    # Additional stats
+    total_products = len(products)
+    sold_products = len([p for p in products if float(p.get('sell_price', 0)) > 0])
+    unsold_products = total_products - sold_products
+    
+    return jsonify({
+        'total_benefits': total_benefits,
+        'capital': capital,
+        'total_products': total_products,
+        'sold_products': sold_products,
+        'unsold_products': unsold_products
+    })
+
 @app.route('/api/providers')
 def get_providers():
     """Get all unique providers"""
