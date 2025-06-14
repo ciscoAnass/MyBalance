@@ -396,6 +396,31 @@
                 padding: 8px 6px;
             }
         }
+.btn-delete {
+            background: transparent;
+            color: #dc3545;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+            border-radius: 6px;
+        }
+
+        .actions-cell {
+            text-align: center;
+            width: 80px;
+        }
     </style>
 </head>
 <body>
@@ -585,7 +610,7 @@
 
             if (filteredProducts.length === 0) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="9" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                row.innerHTML = `<td colspan="10" style="text-align: center; padding: 2rem; color: #7f8c8d;">
                     ${currentSearchTerm ? 'No products found matching your search.' : 'No products found.'}
                 </td>`;
                 tbody.appendChild(row);
@@ -608,6 +633,9 @@
                     <td>${product.sell_price > 0 ? product.benefit.toFixed(2) : ''}</td>
                     <td>${product.date}</td>
                     <td>${product.sell_date || ''}</td>
+                    <td class="actions-cell">
+                        <button class="btn-delete" onclick="deleteProduct(${product.id})" title="Delete this product">🗑️</button>
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -823,6 +851,39 @@
                 }
             } catch (error) {
                 showStatus('Error auto-saving: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteProduct(productId) {
+            // Confirm deletion
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const confirmMessage = `Are you sure you want to delete:\n\nID: ${product.id}\nName: ${product.name}\nBuy Price: ${product.buy_price.toFixed(2)}\n\nThis action cannot be undone!`;
+            
+            if (!confirm(confirmMessage)) {
+                return; // User cancelled
+            }
+
+            try {
+                const response = await fetch('/api/products/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: productId })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`Product ID ${productId} deleted successfully`, 'success');
+                    loadProducts(); // Reload all products and reapply filters
+                } else {
+                    showStatus('Error deleting product', 'error');
+                }
+            } catch (error) {
+                showStatus('Error deleting product: ' + error.message, 'error');
             }
         }
 

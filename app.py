@@ -161,6 +161,19 @@ def update_product():
     save_products(products)
     return jsonify({'success': True})
 
+@app.route('/api/products/delete', methods=['POST'])
+def delete_product():
+    """Delete a product"""
+    data = request.json
+    product_id = int(data.get('id'))
+    
+    products = load_products()
+    products = [p for p in products if p['id'] != product_id]
+    
+    # Auto-save immediately
+    save_products(products)
+    return jsonify({'success': True})
+
 @app.route('/api/products/save', methods=['POST'])
 def save_all_products():
     """Save all products from frontend"""
@@ -183,4 +196,3 @@ def get_providers():
 if __name__ == '__main__':
     ensure_csv_exists()
     app.run(debug=True, port=5000)
-    
