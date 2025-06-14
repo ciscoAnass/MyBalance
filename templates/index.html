@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Inventory Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fafafa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 45px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #95a5a6;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .search-clear:hover {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .search-results-info {
+            margin-left: 1rem;
+            color: #7f8c8d;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .highlight {
+            background-color: #fff3cd !important;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: #2c3e50;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .mode-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .mode-selector {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .date-filter {
+            display: none;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .date-filter input, .date-filter select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background: #e9ecef;
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            color: #999;
+            font-size: 12px;
+        }
+
+        th.sort-asc::after {
+            content: ' ↑';
+            color: #2c3e50;
+        }
+
+        th.sort-desc::after {
+            content: ' ↓';
+            color: #2c3e50;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr.sold {
+            background-color: #d4edda !important;
+        }
+
+        tr:nth-child(even):not(.sold) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover:not(.sold) {
+            background-color: #e3f2fd;
+        }
+
+        .editable {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .editable:hover {
+            background-color: rgba(52, 73, 94, 0.1);
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 2px solid #3498db;
+            border-radius: 3px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: #2980b9;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+            font-weight: 400;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+
+        .provider-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .provider-input-group select {
+            flex: 1;
+        }
+
+        .provider-input-group input {
+            flex: 1;
+            display: none;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .mode-controls {
+                margin-left: 0;
+                justify-content: center;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 Product Inventory Manager</h1>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <button class="btn" onclick="openAddModal()">Insert Data</button>
+            <button class="btn btn-success" onclick="saveData()" title="Manual backup - Data is auto-saved on changes">Manual Save</button>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Search by ID, name, serial number, provider..." 
+                    oninput="performSearch()"
+                    onkeydown="handleSearchKeydown(event)"
+                >
+                <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear search">×</button>
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <div class="search-results-info" id="searchInfo"></div>
+            
+            <div class="mode-controls">
+                <select class="mode-selector" onchange="changeViewMode(this.value)">
+                    <option value="normal">Normal Mode</option>
+                    <option value="month">Month Filter</option>
+                </select>
+                
+                <div class="date-filter" id="dateFilter">
+                    <select id="monthSelect">
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <input type="number" id="yearInput" min="2020" max="2030" value="2025" placeholder="Year">
+                    <button class="btn" onclick="applyDateFilter()">Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="table-container">
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" onclick="sortTable('id')">ID</th>
+                        <th class="sortable" onclick="sortTable('name')">Product Name</th>
+                        <th class="sortable" onclick="sortTable('serial_number')">Serial Number</th>
+                        <th class="sortable" onclick="sortTable('provider')">Provider</th>
+                        <th class="sortable" onclick="sortTable('buy_price')">Buy Price ($)</th>
+                        <th class="sortable" onclick="sortTable('sell_price')">Sell Price ($)</th>
+                        <th class="sortable" onclick="sortTable('benefit')">Benefit ($)</th>
+                        <th class="sortable" onclick="sortTable('date')">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <!-- Products will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Product</h2>
+                <span class="close" onclick="closeAddModal()">&times;</span>
+            </div>
+            
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="productName">Product Name <span class="required">*</span></label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="serialNumber">Serial Number</label>
+                    <input type="text" id="serialNumber" name="serial_number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="provider">Provider</label>
+                    <div class="provider-input-group">
+                        <select id="providerSelect" name="provider" onchange="toggleProviderInput()">
+                            <option value="">Select existing provider...</option>
+                            <option value="__new__">Add new provider</option>
+                        </select>
+                        <input type="text" id="newProviderInput" name="new_provider" placeholder="Enter new provider name" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="buyPrice">Buy Price ($)</label>
+                    <input type="number" id="buyPrice" name="buy_price" step="0.01" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sellPrice">Sell Price ($)</label>
+                    <input type="number" id="sellPrice" name="sell_price" step="0.01" placeholder="Optional">
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" min="1" value="1">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn">Add Product(s)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+        let products = [];
+        let providers = [];
+        let sortColumn = '';
+        let sortDirection = 'asc';
+        let filteredProducts = [];
+        let currentViewMode = 'normal';
+        let currentSearchTerm = '';
+        let baseFilteredProducts = []; // Products after date filter but before search
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            loadProviders();
+            setupFormHandlers();
+        });
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                products = await response.json();
+                applyCurrentFilters();
+                renderTable();
+            } catch (error) {
+                showStatus('Error loading products: ' + error.message, 'error');
+            }
+        }
+
+        async function loadProviders() {
+            try {
+                const response = await fetch('/api/providers');
+                providers = await response.json();
+                populateProviderSelect();
+            } catch (error) {
+                console.error('Error loading providers:', error);
+            }
+        }
+
+        function populateProviderSelect() {
+            const select = document.getElementById('providerSelect');
+            // Clear existing options except first two
+            while (select.children.length > 2) {
+                select.removeChild(select.lastChild);
+            }
+            
+            providers.forEach(provider => {
+                const option = document.createElement('option');
+                option.value = provider;
+                option.textContent = provider;
+                select.appendChild(option);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredProducts.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="9" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                    ${currentSearchTerm ? 'No products found matching your search.' : 'No products found.'}
+                </td>`;
+                tbody.appendChild(row);
+                return;
+            }
+
+            filteredProducts.forEach(product => {
+                const row = document.createElement('tr');
+                if (product.sell_price > 0) {
+                    row.classList.add('sold');
+                }
+
+                row.innerHTML = `
+                    <td>${highlightSearchTerm(String(product.id))}</td>
+                    <td class="editable" onclick="editCell(this, ${product.id}, 'name')">${highlightSearchTerm(product.name || '')}</td>
+                    <td class="editable" onclick="editCell(this, ${product.id}, 'serial_number')">${highlightSearchTerm(product.serial_number || '')}</td>
+                    <td class="editable" onclick="editCell(this, ${product.id}, 'provider')">${highlightSearchTerm(product.provider || '')}</td>
+                    <td class="editable" onclick="editCell(this, ${product.id}, 'buy_price')">${product.buy_price.toFixed(2)}</td>
+                    <td class="editable" onclick="editCell(this, ${product.id}, 'sell_price')">${product.sell_price > 0 ? product.sell_price.toFixed(2) : ''}</td>
+                    <td>${product.benefit.toFixed(2)}</td>
+                    <td>${product.date}</td>
+                    <td>${product.sell_date || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateSearchInfo();
+        }
+
+        function highlightSearchTerm(text) {
+            if (!currentSearchTerm || !text) return text;
+            
+            const regex = new RegExp(`(${escapeRegExp(currentSearchTerm)})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function editCell(cell, productId, field) {
+            const currentValue = cell.textContent;
+            const input = document.createElement('input');
+            input.className = 'edit-input';
+            input.value = currentValue;
+            
+            if (field.includes('price')) {
+                input.type = 'number';
+                input.step = '0.01';
+            } else {
+                input.type = 'text';
+            }
+
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            function saveEdit() {
+                const newValue = input.value.trim();
+                updateProduct(productId, field, newValue);
+                cell.textContent = newValue;
+            }
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveEdit();
+                }
+            });
+        }
+
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchClear = document.getElementById('searchClear');
+            currentSearchTerm = searchInput.value.trim();
+            
+            // Show/hide clear button
+            if (currentSearchTerm) {
+                searchClear.style.display = 'block';
+            } else {
+                searchClear.style.display = 'none';
+            }
+
+            applySearchFilter();
+            renderTable();
+        }
+
+        function applySearchFilter() {
+            if (!currentSearchTerm) {
+                filteredProducts = [...baseFilteredProducts];
+                return;
+            }
+
+            const searchLower = currentSearchTerm.toLowerCase();
+            filteredProducts = baseFilteredProducts.filter(product => {
+                return (
+                    String(product.id).includes(searchLower) ||
+                    (product.name && product.name.toLowerCase().includes(searchLower)) ||
+                    (product.serial_number && product.serial_number.toLowerCase().includes(searchLower)) ||
+                    (product.provider && product.provider.toLowerCase().includes(searchLower)) ||
+                    String(product.buy_price).includes(searchLower) ||
+                    String(product.sell_price).includes(searchLower) ||
+                    String(product.benefit).includes(searchLower) ||
+                    product.date.includes(searchLower) ||
+                    (product.sell_date && product.sell_date.includes(searchLower))
+                );
+            });
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchClear = document.getElementById('searchClear');
+            
+            searchInput.value = '';
+            currentSearchTerm = '';
+            searchClear.style.display = 'none';
+            
+            applySearchFilter();
+            renderTable();
+            searchInput.focus();
+        }
+
+        function handleSearchKeydown(event) {
+            if (event.key === 'Escape') {
+                clearSearch();
+            }
+        }
+
+        function updateSearchInfo() {
+            const searchInfo = document.getElementById('searchInfo');
+            const totalProducts = products.length;
+            const displayedProducts = filteredProducts.length;
+            
+            if (currentSearchTerm) {
+                searchInfo.textContent = `Found ${displayedProducts} of ${totalProducts} products`;
+            } else if (currentViewMode === 'month') {
+                searchInfo.textContent = `Showing ${displayedProducts} of ${totalProducts} products`;
+            } else {
+                searchInfo.textContent = `${displayedProducts} products`;
+            }
+        }
+
+        function applyCurrentFilters() {
+            // First apply date filter if in month mode
+            if (currentViewMode === 'month') {
+                const month = document.getElementById('monthSelect').value;
+                const year = document.getElementById('yearInput').value;
+                
+                if (year) {
+                    const targetMonth = `${year}-${month}`;
+                    baseFilteredProducts = products.filter(product => {
+                        return product.date.startsWith(targetMonth);
+                    });
+                } else {
+                    baseFilteredProducts = [...products];
+                }
+            } else {
+                baseFilteredProducts = [...products];
+            }
+
+            // Then apply search filter
+            applySearchFilter();
+        }
+
+        function updateProduct(productId, field, value) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                // Store old sell_price to detect changes
+                const oldSellPrice = product.sell_price || 0;
+                
+                if (field.includes('price')) {
+                    product[field] = parseFloat(value) || 0;
+                } else {
+                    product[field] = value;
+                }
+                
+                // Recalculate benefit
+                product.benefit = (product.sell_price || 0) - (product.buy_price || 0);
+                
+                // Set sell_date when sell_price is first added (changed from 0 to a value)
+                if (field === 'sell_price') {
+                    if (product.sell_price > 0 && oldSellPrice === 0) {
+                        // First time setting a sell price - set current date
+                        product.sell_date = new Date().toISOString().split('T')[0];
+                    } else if (product.sell_price === 0) {
+                        // Removing sell price - clear sell date
+                        product.sell_date = '';
+                    }
+                }
+                
+                // Update filtered products
+                const filteredProduct = filteredProducts.find(p => p.id === productId);
+                if (filteredProduct) {
+                    Object.assign(filteredProduct, product);
+                }
+                
+                // Update base filtered products
+                const baseProduct = baseFilteredProducts.find(p => p.id === productId);
+                if (baseProduct) {
+                    Object.assign(baseProduct, product);
+                }
+                
+                // Auto-save to server immediately
+                autoSaveProduct(productId, field, value);
+                
+                renderTable();
+            }
+        }
+
+        async function autoSaveProduct(productId, field, value) {
+            try {
+                const updateData = { id: productId };
+                updateData[field] = value;
+                
+                const response = await fetch('/api/products/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show brief success indicator
+                    showAutoSaveStatus();
+                } else {
+                    showStatus('Error auto-saving changes', 'error');
+                }
+            } catch (error) {
+                showStatus('Error auto-saving: ' + error.message, 'error');
+            }
+        }
+
+        function showAutoSaveStatus() {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = '✓ Changes saved automatically';
+            statusDiv.className = 'status-message status-success';
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 1500);
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            // Update header classes
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            const currentTh = event.target;
+            currentTh.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            filteredProducts.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (column.includes('price') || column === 'benefit' || column === 'id') {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        function changeViewMode(mode) {
+            currentViewMode = mode;
+            const dateFilter = document.getElementById('dateFilter');
+            
+            if (mode === 'month') {
+                dateFilter.style.display = 'flex';
+            } else {
+                dateFilter.style.display = 'none';
+                baseFilteredProducts = [...products];
+                applySearchFilter();
+                renderTable();
+            }
+        }
+
+        function applyDateFilter() {
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearInput').value;
+            
+            if (!year) {
+                showStatus('Please enter a year', 'error');
+                return;
+            }
+
+            applyCurrentFilters();
+            renderTable();
+            showStatus(`Showing products from ${getMonthName(month)} ${year}`, 'success');
+        }
+
+        function getMonthName(monthNum) {
+            const months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[parseInt(monthNum)];
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+            document.getElementById('addProductForm').reset();
+            document.getElementById('quantity').value = 1;
+            toggleProviderInput(); // Reset provider input
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        function toggleProviderInput() {
+            const select = document.getElementById('providerSelect');
+            const input = document.getElementById('newProviderInput');
+            
+            if (select.value === '__new__') {
+                input.style.display = 'block';
+                select.style.display = 'none';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                select.style.display = 'block';
+            }
+        }
+
+        function setupFormHandlers() {
+            document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Handle provider selection
+                if (data.provider === '__new__' && data.new_provider) {
+                    data.provider = data.new_provider.trim();
+                }
+                
+                if (!data.name.trim()) {
+                    showStatus('Product name is required', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/products/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showStatus(`Successfully added ${result.products_added} product(s) - Auto-saved!`, 'success');
+                        closeAddModal();
+                        loadProducts(); // This will reapply all filters
+                        loadProviders(); // Refresh providers list
+                    } else {
+                        showStatus(result.error || 'Error adding product', 'error');
+                    }
+                } catch (error) {
+                    showStatus('Error adding product: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function saveData() {
+            try {
+                const response = await fetch('/api/products/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ products: products })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('Manual backup completed successfully!', 'success');
+                } else {
+                    showStatus('Error with manual backup', 'error');
+                }
+            } catch (error) {
+                showStatus('Error with manual backup: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('addModal');
+            if (event.target === modal) {
+                closeAddModal();
+            }
+        });
+
+        // Handle escape key to close modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeAddModal();
+            }
+        });
+
+        // Set current month and year as default in date filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            document.getElementById('monthSelect').value = String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('yearInput').value = now.getFullYear();
+        });
+    </script>
+</body>
+</html>
+
