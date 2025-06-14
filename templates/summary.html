@@ -77,11 +77,11 @@
             padding-bottom: 0.5rem;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        .stats-row {
+            display: flex;
             gap: 1.5rem;
             margin-top: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .stat-card {
@@ -90,6 +90,8 @@
             border-radius: 8px;
             border-left: 4px solid #3498db;
             transition: transform 0.2s;
+            flex: 1;
+            min-width: 200px;
         }
 
         .stat-card:hover {
@@ -148,7 +150,160 @@
             color: #e74c3c;
         }
 
-        @media (max-width: 768px) {
+        .year-selector {
+            margin-bottom: 2rem;
+        }
+
+        .year-selector select {
+            padding: 10px 15px;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .year-selector select:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .month-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+            text-align: center;
+        }
+
+        .month-card.has-data {
+            border-left-color: #27ae60;
+            background: #f0f9f4;
+        }
+
+        .month-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .month-stats {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .chart-container {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .chart {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 280px;
+            gap: 8px;
+            padding: 20px 10px;
+            position: relative;
+        }
+
+        .bar {
+            flex: 1;
+            max-width: 60px;
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border-radius: 4px 4px 2px 2px;
+            position: relative;
+            min-height: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            background: linear-gradient(180deg, #27ae60 0%, #229954 100%);
+            transform: translateY(-3px);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #7f8c8d;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #2c3e50;
+            font-weight: 600;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bar:hover .bar-value {
+            opacity: 1;
+        }
+
+        .chart-grid {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 60px;
+            pointer-events: none;
+        }
+
+        .grid-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .hidden {
+            display: none;
+        }
             .stats-grid {
                 grid-template-columns: 1fr;
             }
@@ -178,7 +333,7 @@
             <h2>📋 General Invoice</h2>
             <div class="loading" id="loading">Loading summary data...</div>
             
-            <div class="stats-grid" id="statsGrid" style="display: none;">
+            <div class="stats-row" id="statsGrid" style="display: none;">
                 <div class="stat-card benefits">
                     <div class="stat-value currency" id="totalBenefits">$0.00</div>
                     <div class="stat-label">Total Benefits</div>
@@ -205,12 +360,63 @@
             </div>
         </div>
 
-        <!-- Placeholder for Part 2, 3, 4 -->
-        <div class="section" style="background: #f8f9fa; border: 2px dashed #ddd;">
-            <h2>🚧 Coming Next</h2>
-            <p style="color: #7f8c8d; text-align: center; padding: 2rem;">
-                Parts 2, 3, and 4 will be added here based on your requirements...
-            </p>
+        <!-- Part 2: Month Benefits -->
+        <div class="section">
+            <h2>📅 Monthly Benefits Analysis</h2>
+            
+            <div class="year-selector">
+                <label for="yearSelect" style="color: #2c3e50; font-weight: 500; margin-right: 1rem;">Select Year:</label>
+                <select id="yearSelect" onchange="loadMonthlyData()">
+                    <option value="">Choose a year...</option>
+                </select>
+            </div>
+
+            <div id="monthlyLoading" class="loading hidden">Loading monthly data...</div>
+            
+            <div id="monthlyContent" class="hidden">
+                <!-- Year Summary -->
+                <div class="stats-row" style="margin-bottom: 2rem;">
+                    <div class="stat-card benefits">
+                        <div class="stat-value currency" id="yearBenefits">$0.00</div>
+                        <div class="stat-label">Year Benefits</div>
+                        <div class="stat-description">Total profits for selected year</div>
+                    </div>
+                    
+                    <div class="stat-card capital">
+                        <div class="stat-value currency" id="yearCapital">$0.00</div>
+                        <div class="stat-label">Year Capital</div>
+                        <div class="stat-description">Unsold inventory value</div>
+                    </div>
+                    
+                    <div class="stat-card sold">
+                        <div class="stat-value" id="yearProductsBought">0</div>
+                        <div class="stat-label">Products Bought</div>
+                        <div class="stat-description">Items purchased this year</div>
+                    </div>
+                    
+                    <div class="stat-card unsold">
+                        <div class="stat-value" id="yearProductsSold">0</div>
+                        <div class="stat-label">Products Sold</div>
+                        <div class="stat-description">Items sold this year</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Breakdown -->
+                <h3 style="color: #2c3e50; margin: 2rem 0 1rem 0;">Monthly Breakdown</h3>
+                <div class="monthly-grid" id="monthlyGrid">
+                    <!-- Monthly cards will be generated here -->
+                </div>
+
+                <!-- Benefits Chart -->
+                <div class="chart-container">
+                    <div class="chart-title">Monthly Benefits Chart</div>
+                    <div class="chart">
+                        <div class="bar-chart" id="benefitsChart">
+                            <!-- Chart bars will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -218,6 +424,7 @@
         // Load summary data when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadSummaryData();
+            loadAvailableYears();
         });
 
         async function loadSummaryData() {
@@ -233,11 +440,146 @@
                 
                 // Show stats and hide loading
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('statsGrid').style.display = 'grid';
+                document.getElementById('statsGrid').style.display = 'flex';
                 
             } catch (error) {
                 console.error('Error loading summary data:', error);
                 document.getElementById('loading').textContent = 'Error loading data. Please try again.';
+            }
+        }
+
+        async function loadAvailableYears() {
+            try {
+                const response = await fetch('/api/summary/available-years');
+                const years = await response.json();
+                
+                const yearSelect = document.getElementById('yearSelect');
+                years.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                });
+                
+                // Set current year as default if available
+                const currentYear = new Date().getFullYear();
+                if (years.includes(currentYear)) {
+                    yearSelect.value = currentYear;
+                    loadMonthlyData();
+                }
+                
+            } catch (error) {
+                console.error('Error loading available years:', error);
+            }
+        }
+
+        async function loadMonthlyData() {
+            const year = document.getElementById('yearSelect').value;
+            if (!year) {
+                document.getElementById('monthlyContent').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('monthlyLoading').classList.remove('hidden');
+            document.getElementById('monthlyContent').classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/summary/monthly/${year}`);
+                const data = await response.json();
+                
+                // Update year totals
+                document.getElementById('yearBenefits').textContent = formatCurrency(data.year_totals.total_benefits);
+                document.getElementById('yearCapital').textContent = formatCurrency(data.year_totals.total_capital);
+                document.getElementById('yearProductsBought').textContent = data.year_totals.total_products_bought;
+                document.getElementById('yearProductsSold').textContent = data.year_totals.total_products_sold;
+                
+                // Generate monthly cards
+                generateMonthlyCards(data.monthly_data);
+                
+                // Generate benefits chart
+                generateBenefitsChart(data.monthly_data);
+                
+                // Show content
+                document.getElementById('monthlyLoading').classList.add('hidden');
+                document.getElementById('monthlyContent').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading monthly data:', error);
+                document.getElementById('monthlyLoading').textContent = 'Error loading monthly data.';
+            }
+        }
+
+        function generateMonthlyCards(monthlyData) {
+            const grid = document.getElementById('monthlyGrid');
+            grid.innerHTML = '';
+            
+            for (let month = 1; month <= 12; month++) {
+                const data = monthlyData[month];
+                const hasData = data.benefits > 0 || data.products_bought > 0 || data.products_sold > 0;
+                
+                const card = document.createElement('div');
+                card.className = `month-card ${hasData ? 'has-data' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="month-name">${data.month_name}</div>
+                    <div class="month-stats">
+                        <div>💰 ${formatCurrency(data.benefits)}</div>
+                        <div>📦 Bought: ${data.products_bought}</div>
+                        <div>🛒 Sold: ${data.products_sold}</div>
+                        <div>🏛️ Capital: ${formatCurrency(data.capital)}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            }
+        }
+
+        function generateBenefitsChart(monthlyData) {
+            const chart = document.getElementById('benefitsChart');
+            chart.innerHTML = '';
+            
+            // Add grid lines
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'chart-grid';
+            
+            // Create 5 horizontal grid lines
+            for (let i = 0; i <= 4; i++) {
+                const gridLine = document.createElement('div');
+                gridLine.className = 'grid-line';
+                gridLine.style.bottom = `${(i * 25)}%`;
+                gridContainer.appendChild(gridLine);
+            }
+            
+            chart.appendChild(gridContainer);
+            
+            // Find max benefit for scaling
+            let maxBenefit = 0;
+            for (let month = 1; month <= 12; month++) {
+                maxBenefit = Math.max(maxBenefit, monthlyData[month].benefits);
+            }
+            
+            if (maxBenefit === 0) maxBenefit = 1; // Prevent division by zero
+            
+            for (let month = 1; month <= 12; month++) {
+                const data = monthlyData[month];
+                const height = Math.max((data.benefits / maxBenefit) * 85, data.benefits > 0 ? 8 : 0); // Minimum 8px if has data
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${height}%`;
+                bar.title = `${data.month_name}: ${formatCurrency(data.benefits)}`;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = data.month_name.substr(0, 3);
+                
+                const value = document.createElement('div');
+                value.className = 'bar-value';
+                value.textContent = data.benefits > 0 ? formatCurrency(data.benefits) : '$0';
+                
+                bar.appendChild(label);
+                bar.appendChild(value);
+                chart.appendChild(bar);
             }
         }
 

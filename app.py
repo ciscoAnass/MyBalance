@@ -226,6 +226,85 @@ def get_summary_stats():
         'unsold_products': unsold_products
     })
 
+@app.route('/api/summary/monthly/<int:year>')
+def get_monthly_stats(year):
+    """Get monthly statistics for a specific year"""
+    products = load_products()
+    
+    # Initialize monthly data
+    monthly_data = {}
+    for month in range(1, 13):
+        monthly_data[month] = {
+            'month_name': ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'][month],
+            'benefits': 0,
+            'capital': 0,
+            'products_bought': 0,
+            'products_sold': 0
+        }
+    
+    year_totals = {
+        'total_benefits': 0,
+        'total_capital': 0,
+        'total_products_bought': 0,
+        'total_products_sold': 0
+    }
+    
+    for product in products:
+        # Parse dates
+        buy_date = product.get('date', '')
+        sell_date = product.get('sell_date', '')
+        
+        # Check if product was bought in this year
+        if buy_date.startswith(str(year)):
+            month = int(buy_date.split('-')[1])
+            monthly_data[month]['products_bought'] += 1
+            year_totals['total_products_bought'] += 1
+            
+            # Add to capital if not sold
+            if float(product.get('sell_price', 0)) == 0:
+                buy_price = float(product.get('buy_price', 0))
+                monthly_data[month]['capital'] += buy_price
+                year_totals['total_capital'] += buy_price
+        
+        # Check if product was sold in this year
+        if sell_date and sell_date.startswith(str(year)):
+            month = int(sell_date.split('-')[1])
+            benefit = float(product.get('benefit', 0))
+            monthly_data[month]['benefits'] += benefit
+            monthly_data[month]['products_sold'] += 1
+            year_totals['total_benefits'] += benefit
+            year_totals['total_products_sold'] += 1
+    
+    return jsonify({
+        'year': year,
+        'monthly_data': monthly_data,
+        'year_totals': year_totals
+    })
+
+@app.route('/api/summary/available-years')
+def get_available_years():
+    """Get all years that have products"""
+    products = load_products()
+    years = set()
+    
+    for product in products:
+        # Extract year from buy date
+        buy_date = product.get('date', '')
+        if buy_date:
+            year = buy_date.split('-')[0]
+            if year.isdigit():
+                years.add(int(year))
+        
+        # Extract year from sell date
+        sell_date = product.get('sell_date', '')
+        if sell_date:
+            year = sell_date.split('-')[0]
+            if year.isdigit():
+                years.add(int(year))
+    
+    return jsonify(sorted(list(years), reverse=True))
+
 @app.route('/api/providers')
 def get_providers():
     """Get all unique providers"""
